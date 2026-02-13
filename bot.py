@@ -1,7 +1,7 @@
 import os
 import asyncio
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -32,6 +32,10 @@ async def on_ready():
     print(f'🔊 File audio: {WELCOME_SOUND}')
     print('-----------------------------------')
 
+    # Start keep_alive loop
+    if not keep_alive.is_running():
+        keep_alive.start()
+
     # Auto-join voice channel jika VOICE_CHANNEL_ID diset
     if VOICE_CHANNEL_ID:
         channel = bot.get_channel(int(VOICE_CHANNEL_ID))
@@ -61,8 +65,31 @@ async def on_voice_state_update(member, before, after):
 
         if voice_client and voice_client.is_connected() and voice_client.channel == after.channel:
             print(f'👋 {member.display_name} masuk ke {after.channel.name} - Memutar welcome sound...')
+            await asyncio.sleep(1) # Delay 1 detik sebelum memutar suara
             await play_welcome_sound(voice_client)
 
+
+
+@tasks.loop(minutes=5)
+async def keep_alive():
+    """Loop untuk menjaga koneksi bot tetap hidup."""
+    if VOICE_CHANNEL_ID:
+        channel = bot.get_channel(int(VOICE_CHANNEL_ID))
+        if channel and isinstance(channel, discord.VoiceChannel):
+            if channel.guild.voice_client and channel.guild.voice_client.is_connected():
+                # Bot sudah connected, mungkin cek pindah channel jika perlu
+                pass
+            else:
+                 print('🔄 Keep-alive: Bot terputus, mencoba reconnect...')
+                 try:
+                     await channel.connect(self_deaf=True)
+                     print('✅ Keep-alive: Berhasil reconnect.')
+                 except Exception as e:
+                     print(f'❌ Keep-alive: Gagal reconnect - {e}')
+
+@keep_alive.before_loop
+async def before_keep_alive():
+    await bot.wait_until_ready()
 
 async def play_welcome_sound(voice_client):
     """Putar file audio welcome.mp3."""
@@ -213,6 +240,30 @@ async def help_command(ctx):
     embed.add_field(name='!help_welcome', value='Tampilkan daftar command ini', inline=False)
     await ctx.send(embed=embed)
 
+
+    await ctx.send(embed=embed)
+
+
+@bot.command(name='reconnect')
+async def reconnect(ctx):
+    """Command !reconnect - Paksa bot untuk disconnect dan connect ulang."""
+    if ctx.voice_client:
+        channel = ctx.voice_client.channel
+        await ctx.voice_client.disconnect()
+        await asyncio.sleep(1)
+        await channel.connect(self_deaf=True)
+        await ctx.send(f'🔄 Berhasil reconnect ke **{channel.name}**')
+    else:
+        # Jika tidak connect, coba connect ke default channel
+        if VOICE_CHANNEL_ID:
+            channel = bot.get_channel(int(VOICE_CHANNEL_ID))
+            if channel:
+                await channel.connect(self_deaf=True)
+                await ctx.send(f'✅ Berhasil connect ke default channel **{channel.name}**')
+            else:
+                await ctx.send('❌ Default channel tidak ditemukan.')
+        else:
+             await ctx.send('❌ Bot tidak terhubung dan tidak ada default channel. Gunakan !join.')
 
 # Handle reconnect jika bot terputus
 @bot.event

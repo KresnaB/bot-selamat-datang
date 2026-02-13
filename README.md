@@ -33,7 +33,25 @@ Bot Discord Python yang akan bergabung ke voice channel dan memutar suara sambut
    VOICE_CHANNEL_ID=optional_channel_id
    ```
 
-## Cara Menjalankan
+
+## Cara Menjalankan (Docker)
+
+1. Pastikan Docker dan Docker Compose sudah terinstall.
+2. Buat file `.env` (lihat bagian Instalasi).
+3. Jalankan perintah:
+   ```bash
+   docker-compose up -d --build
+   ```
+4. Untuk melihat log:
+   ```bash
+   docker-compose logs -f
+   ```
+5. Untuk mematikan bot:
+   ```bash
+   docker-compose down
+   ```
+
+## Cara Menjalankan (Manual)
 ```bash
 python bot.py
 ```
@@ -41,6 +59,7 @@ python bot.py
 ## Perintah Bot (Prefix: `!`)
 - `!join`: Menyuruh bot masuk ke voice channel kamu saat ini.
 - `!leave`: Menyuruh bot keluar dari voice channel.
+- `!reconnect`: Memaksa bot untuk disconnect dan connect ulang (berguna jika bot error/suara hilang).
 - `!setchannel <id>`: Mengatur channel default agar bot otomatis join saat dinyalakan.
 - `!status`: Melihat status koneksi bot.
 - `!help_welcome`: Menampilkan bantuan.
