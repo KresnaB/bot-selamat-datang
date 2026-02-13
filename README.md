@@ -26,6 +26,8 @@ Bot Discord Python yang akan bergabung ke voice channel dan memutar suara sambut
    pip install -r requirements.txt
    ```
 
+> **Note:** Jika mengalami error `version unsupported` saat menjalankan docker-compose, pastikan Anda menggunakan versi docker-compose yang mendukung format versi 3.3.
+
 3. Konfigurasi `.env`:
    Buat file `.env` di folder utama dan isi:
    ```env
