@@ -3,6 +3,8 @@ import asyncio
 import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
+from gtts import gTTS
+import os # Ensure os is imported, though it was already there
 
 # Load environment variables
 load_dotenv()
@@ -65,8 +67,8 @@ async def on_voice_state_update(member, before, after):
 
         if voice_client and voice_client.is_connected() and voice_client.channel == after.channel:
             print(f'👋 {member.display_name} masuk ke {after.channel.name} - Memutar welcome sound...')
-            await asyncio.sleep(1) # Delay 1 detik sebelum memutar suara
-            await play_welcome_sound(voice_client)
+            await asyncio.sleep(2) # Delay 2 detik sebelum memutar suara
+            await play_welcome_sound(voice_client, member.display_name)
 
 
 
@@ -91,8 +93,8 @@ async def keep_alive():
 async def before_keep_alive():
     await bot.wait_until_ready()
 
-async def play_welcome_sound(voice_client):
-    """Putar file audio welcome.mp3."""
+async def play_welcome_sound(voice_client, member_name):
+    """Putar file audio welcome custom menggunakan TTS."""
     async with audio_lock:
         try:
             # Tunggu jika sedang memutar audio lain
@@ -100,9 +102,20 @@ async def play_welcome_sound(voice_client):
                 voice_client.stop()
                 await asyncio.sleep(0.5)
 
+            # Generate TTS text
+            text = f"Selamat datang {member_name}"
+            
+            # Temporary filename
+            filename = f"welcome_{member_name}.mp3"
+            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+
+            # Generate audio using gTTS
+            tts = gTTS(text=text, lang='id')
+            tts.save(file_path)
+
             # Putar audio menggunakan FFmpeg
             audio_source = discord.FFmpegPCMAudio(
-                WELCOME_SOUND,
+                file_path,
                 executable='ffmpeg'
             )
 
@@ -110,11 +123,17 @@ async def play_welcome_sound(voice_client):
             audio_source = discord.PCMVolumeTransformer(audio_source, volume=1.0)
 
             voice_client.play(audio_source)
-            print(f'🔊 Memutar welcome sound...')
+            print(f'🔊 Memutar welcome sound untuk {member_name}...')
 
             # Tunggu sampai audio selesai
             while voice_client.is_playing():
                 await asyncio.sleep(0.5)
+            
+            # Clean up file after playing
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                print(f"⚠️ Gagal menghapus file temporary: {e}")
 
             print(f'✅ Welcome sound selesai diputar.')
 
