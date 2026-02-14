@@ -67,7 +67,7 @@ async def on_voice_state_update(member, before, after):
 
         if voice_client and voice_client.is_connected() and voice_client.channel == after.channel:
             print(f'👋 {member.display_name} masuk ke {after.channel.name} - Memutar welcome sound...')
-            await asyncio.sleep(2) # Delay 2 detik sebelum memutar suara
+            await asyncio.sleep(1) # Delay 1 detik sebelum memutar suara
             await play_welcome_sound(voice_client, member.display_name)
 
 
@@ -103,7 +103,7 @@ async def play_welcome_sound(voice_client, member_name):
                 await asyncio.sleep(0.5)
 
             # Generate TTS text
-            text = f"Selamat datang {member_name}"
+            text = f"Welcome to the stream {member_name}"
             
             # Temporary filename
             filename = f"welcome_{member_name}.mp3"
