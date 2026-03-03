@@ -12,6 +12,8 @@ logging.basicConfig(
     format='%(asctime)s | %(name)s | %(levelname)s | %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
+logging.getLogger('discord').setLevel(logging.INFO)
+logging.getLogger('discord.http').setLevel(logging.INFO)
 logger = logging.getLogger('welcome.bot')
 
 # Load environment variables
@@ -27,6 +29,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.voice_states = True
 intents.members = True
+intents.presences = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
